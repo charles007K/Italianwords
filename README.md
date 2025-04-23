@@ -10,4 +10,4 @@
 
 ## 在线预览（上传后可用）
 
-👉 https://charles007K.github.io/word-practice/
+👉 https://charles007K.github.io/Italianwords/
