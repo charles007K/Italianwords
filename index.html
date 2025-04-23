@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单词默写本</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f7f9fc;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .progress-bar {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background-color: #4caf50;
+            transition: width 0.3s ease;
+        }
+        .progress-text {
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .definition {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .input-area {
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            width: 100%;
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
+        .result {
+            font-size: 18px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .correct {
+            color: #4caf50;
+        }
+        .incorrect {
+            color: #f44336;
+        }
+        .summary {
+            margin-top: 30px;
+            text-align: center;
+            display: none;
+        }
+        .restart-btn {
+            background-color: #2196F3;
+            margin-top: 20px;
+        }
+        .restart-btn:hover {
+            background-color: #0b7dda;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>单词默写本</h1>
+            <h3>模式：中文 → 外语</h3>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress" id="progressBar"></div>
+        </div>
+        <div class="progress-text" id="progressText">0/13</div>
+        
+        <div class="card" id="wordCard">
+            <div class="definition" id="definition"></div>
+            <div class="input-area">
+                <input type="text" id="wordInput" placeholder="请输入外语单词" autocomplete="off">
+            </div>
+            <button class="btn" id="checkBtn">检查</button>
+            <div class="result" id="result"></div>
+        </div>
+        
+        <div class="summary" id="summary">
+            <h2>默写完成!</h2>
+            <p>你的得分: <span id="score">0</span>/13</p>
+            <button class="btn restart-btn" id="restartBtn">重新开始</button>
+        </div>
+    </div>
+
+    <script>
+        // 模拟加载提供的JSON数据
+        const wordsData = [
+          { "en": "macchina", "zh": "汽车" },
+          { "en": "scuola", "zh": "学校" },
+          { "en": "lavoro", "zh": "工作" },
+          { "en": "strada", "zh": "街道" },
+          { "en": "negozio", "zh": "商店" },
+          { "en": "cibo", "zh": "食物" },
+          { "en": "acqua", "zh": "水" },
+          { "en": "pane", "zh": "面包" },
+          { "en": "latte", "zh": "牛奶" },
+          { "en": "pomeriggio", "zh": "下午" },
+          { "en": "sera", "zh": "晚上" },
+          { "en": "oggi", "zh": "今天" },
+          { "en": "ieri", "zh": "昨天" }
+        ];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // 存储数据的变量
+            let words = wordsData;
+            let totalWords = words.length;
+            let currentWordIndex = 0;
+            let usedIndices = [];
+            let correctCount = 0;
+            let currentRandomIndex = -1;
+            
+            // 获取DOM元素
+            const definitionElement = document.getElementById('definition');
+            const wordInput = document.getElementById('wordInput');
+            const checkBtn = document.getElementById('checkBtn');
+            const resultElement = document.getElementById('result');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const wordCard = document.getElementById('wordCard');
+            const summaryElement = document.getElementById('summary');
+            const scoreElement = document.getElementById('score');
+            const restartBtn = document.getElementById('restartBtn');
+            
+            // 开始游戏函数
+            function startGame() {
+                currentWordIndex = 0;
+                usedIndices = [];
+                correctCount = 0;
+                
+                // 更新UI
+                updateProgress();
+                showNextWord();
+                
+                wordCard.style.display = 'block';
+                summaryElement.style.display = 'none';
+            }
+            
+            // 显示下一个单词
+            function showNextWord() {
+                if (currentWordIndex >= totalWords) {
+                    // 所有单词默写完成
+                    finishGame();
+                    return;
+                }
+                
+                // 找一个未使用的随机单词
+                let randomIndex;
+                let attempts = 0;
+                do {
+                    randomIndex = Math.floor(Math.random() * words.length);
+                    attempts++;
+                    // 防止无限循环
+                    if (attempts > 100) break;
+                } while (usedIndices.includes(randomIndex));
+                
+                if (!usedIndices.includes(randomIndex)) {
+                    usedIndices.push(randomIndex);
+                    currentRandomIndex = randomIndex;
+                    
+                    // 显示中文提示
+                    const currentWord = words[randomIndex];
+                    definitionElement.textContent = currentWord.zh;
+                    
+                    // 清空输入框和结果
+                    wordInput.value = '';
+                    resultElement.textContent = '';
+                    wordInput.focus();
+                }
+            }
+            
+            // 检查答案
+            function checkAnswer() {
+                const userInput = wordInput.value.trim().toLowerCase();
+                const currentWord = words[currentRandomIndex];
+                
+                if (!userInput) {
+                    resultElement.textContent = '请输入答案';
+                    resultElement.className = 'result incorrect';
+                    return;
+                }
+                
+                const isCorrect = userInput === currentWord.en.toLowerCase();
+                
+                if (isCorrect) {
+                    resultElement.textContent = '正确!';
+                    resultElement.className = 'result correct';
+                    correctCount++;
+                    
+                    // 增加进度计数
+                    currentWordIndex++;
+                    updateProgress();
+                    
+                    // 延迟显示下一个单词
+                    setTimeout(function() {
+                        showNextWord();
+                    }, 1500);
+                } else {
+                    resultElement.textContent = `错误! 正确答案是: ${currentWord.en}`;
+                    resultElement.className = 'result incorrect';
+                }
+            }
+            
+            // 更新进度条和文本
+            function updateProgress() {
+                const progress = (currentWordIndex / totalWords) * 100;
+                progressBar.style.width = `${progress}%`;
+                progressText.textContent = `${currentWordIndex}/${totalWords}`;
+            }
+            
+            // 完成游戏
+            function finishGame() {
+                wordCard.style.display = 'none';
+                summaryElement.style.display = 'block';
+                scoreElement.textContent = correctCount;
+            }
+            
+            // 事件监听器
+            checkBtn.addEventListener('click', checkAnswer);
+            
+            wordInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    checkAnswer();
+                }
+            });
+            
+            restartBtn.addEventListener('click', startGame);
+            
+            // 初始化游戏
+            startGame();
+        });
+    </script>
+</body>
+</html>
