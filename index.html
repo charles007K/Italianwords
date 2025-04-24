@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quaderno di Vocaboli 📚</title>
+    <style>
+        :root[data-theme='light'] {
+            --bg-color: #f7f9fc;
+            --text-color: #000;
+            --container-bg: #fff;
+            --border-color: #e0e0e0;
+            --btn-primary: #4caf50;
+            --btn-primary-hover: #45a049;
+            --btn-secondary: #ff9800;
+            --btn-tertiary: #2196F3;
+            --btn-tertiary-hover: #0b7dda;
+            --progress-bg: #e0e0e0;
+            --progress-fill: #4caf50;
+            --correct-color: #4caf50;
+            --incorrect-color: #f44336;
+        }
+        
+        :root[data-theme='dark'] {
+            --bg-color: #121212;
+            --text-color: #eee;
+            --container-bg: #1e1e1e;
+            --border-color: #333;
+            --btn-primary: #388e3c;
+            --btn-primary-hover: #2e7d32;
+            --btn-secondary: #e65100;
+            --btn-tertiary: #0d47a1;
+            --btn-tertiary-hover: #01579b;
+            --progress-bg: #333;
+            --progress-fill: #388e3c;
+            --correct-color: #4caf50;
+            --incorrect-color: #f44336;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .container {
+            background-color: var(--container-bg);
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .progress-bar {
+            height: 10px;
+            background-color: var(--progress-bg);
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: background-color 0.3s ease;
+        }
+        .progress {
+            height: 100%;
+            background-color: var(--progress-fill);
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+        .progress-text {
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .card {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: border-color 0.3s ease;
+        }
+        .definition {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .input-area {
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            box-sizing: border-box;
+            background-color: var(--container-bg);
+            color: var(--text-color);
+            transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+        }
+        .btn {
+            background-color: var(--btn-primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            width: 100%;
+            transition: background-color 0.3s ease;
+        }
+        .btn:hover {
+            background-color: var(--btn-primary-hover);
+        }
+        #skipBtn {
+            background-color: var(--btn-secondary);
+            margin-top: 10px;
+        }
+        .result {
+            font-size: 18px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .correct {
+            color: var(--correct-color);
+        }
+        .incorrect {
+            color: var(--incorrect-color);
+        }
+        .summary {
+            margin-top: 30px;
+            text-align: center;
+            display: none;
+        }
+        .restart-btn {
+            background-color: var(--btn-tertiary);
+            margin-top: 20px;
+        }
+        .restart-btn:hover {
+            background-color: var(--btn-tertiary-hover);
+        }
+        .settings {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        select, button {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 4px;
+            background-color: var(--container-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        .theme-toggle button {
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+        .wrong-words {
+            margin-top: 20px;
+            text-align: left;
+        }
+        .wrong-words ul {
+            list-style: none;
+            padding: 0;
+        }
+        .wrong-words li {
+            margin: 5px 0;
+        }
+        @media (max-width: 600px) {
+            .settings {
+                flex-direction: column;
+            }
+            .settings select {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="theme-toggle">
+            <button onclick="toggleTheme()">🌓 Toggle Theme</button>
+        </div>
+        <div class="header">
+            <h1>Quaderno di Vocaboli 📚</h1>
+            <div class="settings">
+                <select id="groupSelect">
+                    <option value="-1">Tutte le parole (235) 🌐</option>
+                    <option value="0">Gruppo 1 (12) 🥇</option>
+                    <option value="1">Gruppo 2 (12) 🥈</option>
+                    <option value="2">Gruppo 3 (12) 🥉</option>
+                    <option value="3">Gruppo 4 (12) ⭐</option>
+                    <option value="4">Gruppo 5 (12) 🌟</option>
+                    <option value="5">Gruppo 6 (12) 🚀</option>
+                    <option value="6">Gruppo 7 (12) 🎯</option>
+                    <option value="7">Gruppo 8 (12) 🔔</option>
+                    <option value="8">Gruppo 9 (12) 🎈</option>
+                    <option value="9">Gruppo 10 (12) 🎉</option>
+                    <option value="10">Gruppo 11 (12) 🍎</option>
+                    <option value="11">Gruppo 12 (12) 🍊</option>
+                    <option value="12">Gruppo 13 (12) 🍋</option>
+                    <option value="13">Gruppo 14 (12) 🍉</option>
+                    <option value="14">Gruppo 15 (12) 🍒</option>
+                    <option value="15">Gruppo 16 (11) 🍓</option>
+                    <option value="16">Gruppo 17 (11) 🍇</option>
+                    <option value="17">Gruppo 18 (11) 🍍</option>
+                    <option value="18">Gruppo 19 (11) 🥭</option>
+                    <option value="19">Gruppo 20 (11) 🥑</option>
+                </select>
+                <select id="modeSelect">
+                    <option value="zh2en">Cinese → Italiano 🇮🇹</option>
+                    <option value="en2zh">Italiano → Cinese 🇨🇳</option>
+                </select>
+            </div>
+        </div>
+        <div class="progress-bar">
+            <div class="progress" id="progressBar"></div>
+        </div>
+        <div class="progress-text" id="progressText"></div>
+        
+        <div class="card" id="wordCard">
+            <div class="definition" id="definition"></div>
+            <div class="input-area">
+                <input type="text" id="wordInput" placeholder="Inserisci la risposta ✍️" autocomplete="off">
+            </div>
+            <button class="btn" id="checkBtn">Controlla ✅</button>
+            <button class="btn" id="skipBtn">Salta ⏭️</button>
+            <div class="result" id="result"></div>
+        </div>
+        
+        <div class="summary" id="summary">
+            <h2>Completato! 🎉</h2>
+            <p>Il tuo punteggio: <span id="score"></span>/<span id="total"></span> 🏆</p>
+            <div class="wrong-words" id="wrongWords"></div>
+            <button class="btn restart-btn" id="restartBtn">Ricomincia 🔄</button>
+        </div>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            html.dataset.theme = html.dataset.theme === 'dark' ? 'light' : 'dark';
+            console.log("Tema cambiato a:", html.dataset.theme);
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const fadingElements = document.querySelectorAll('.card, .summary');
+            fadingElements.forEach(el => {
+                el.style.transition = 'opacity 0.5s ease';
+            });
+        });
+    </script>
+
+    <script>
+        const wordGroups = [
+            [
+                { "en": "macchina", "zh": "汽车" },
+                { "en": "scuola", "zh": "学校" },
+                { "en": "lavoro", "zh": "工作" },
+                { "en": "casa", "zh": "房子" },
+                { "en": "negozio", "zh": "商店" },
+                { "en": "cibo", "zh": "食物" },
+                { "en": "acqua", "zh": "水" },
+                { "en": "pane", "zh": "面包" },
+                { "en": "latte", "zh": "牛奶" },
+                { "en": "pomeriggio", "zh": "下午" },
+                { "en": "sera", "zh": "晚上" },
+                { "en": "oggi", "zh": "今天" }
+            ],
+            [
+                { "en": "ieri", "zh": "昨天" },
+                { "en": "domani", "zh": "明天" },
+                { "en": "settimana", "zh": "星期" },
+                { "en": "mese", "zh": "月份" },
+                { "en": "anno", "zh": "年" },
+                { "en": "minuto", "zh": "分钟" },
+                { "en": "secondo", "zh": "秒" },
+                { "en": "chiave", "zh": "钥匙" },
+                { "en": "soldi", "zh": "钱" },
+                { "en": "banca", "zh": "银行" },
+                { "en": "ospedale", "zh": "医院" },
+                { "en": "farmacia", "zh": "药店" }
+            ],
+            [
+                { "en": "medico", "zh": "医生" },
+                { "en": "infermiere", "zh": "护士" },
+                { "en": "malattia", "zh": "疾病" },
+                { "en": "febbre", "zh": "发烧" },
+                { "en": "dolore", "zh": "疼痛" },
+                { "en": "gatto", "zh": "猫" },
+                { "en": "uccello", "zh": "鸟" },
+                { "en": "formaggio", "zh": "奶酪" },
+                { "en": "frutta", "zh": "水果" },
+                { "en": "verdura", "zh": "蔬菜" },
+                { "en": "telefono", "zh": "电话" },
+                { "en": "computer", "zh": "电脑" }
+            ],
+            [
+                { "en": "sedia", "zh": "椅子" },
+                { "en": "tavolo", "zh": "桌子" },
+                { "en": "letto", "zh": "床" },
+                { "en": "finestra", "zh": "窗户" },
+                { "en": "porta", "zh": "门" },
+                { "en": "colore", "zh": "颜色" },
+                { "en": "rosso", "zh": "红色" },
+                { "en": "verde", "zh": "绿色" },
+                { "en": "blu", "zh": "蓝色" },
+                { "en": "giallo", "zh": "黄色" },
+                { "en": "nero", "zh": "黑色" },
+                { "en": "bianco", "zh": "白色" }
+            ],
+            [
+                { "en": "arancione", "zh": "橙色" },
+                { "en": "rosa", "zh": "粉色" },
+                { "en": "grigio", "zh": "灰色" },
+                { "en": "treno", "zh": "火车" },
+                { "en": "aereo", "zh": "飞机" },
+                { "en": "autobus", "zh": "公交车" },
+                { "en": "bicicletta", "zh": "自行车" },
+                { "en": "metropolitana", "zh": "地铁" },
+                { "en": "biglietto", "zh": "票" },
+                { "en": "stazione", "zh": "车站" },
+                { "en": "fermata", "zh": "站点" },
+                { "en": "mappa", "zh": "地图" }
+            ],
+            [
+                { "en": "hotel", "zh": "旅馆" },
+                { "en": "orologio", "zh": "钟表" },
+                { "en": "scarpe", "zh": "鞋子" },
+                { "en": "giacca", "zh": "夹克" },
+                { "en": "camicia", "zh": "衬衫" },
+                { "en": "pantaloni", "zh": "裤子" },
+                { "en": "vestito", "zh": "连衣裙" },
+                { "en": "calze", "zh": "袜子" },
+                { "en": "occhiali", "zh": "眼镜" },
+                { "en": "borsa", "zh": "包" },
+                { "en": "ombrello", "zh": "雨伞" },
+                { "en": "marrone", "zh": "棕色" }
+            ],
+            [
+                { "en": "amico", "zh": "朋友" },
+                { "en": "persona", "zh": "人" },
+                { "en": "bambino", "zh": "小孩" },
+                { "en": "ragazzo", "zh": "男孩" },
+                { "en": "ragazza", "zh": "女孩" },
+                { "en": "donna", "zh": "女人" },
+                { "en": "uomo", "zh": "男人" },
+                { "en": "famiglia", "zh": "家庭" },
+                { "en": "genitori", "zh": "父母" },
+                { "en": "figlio", "zh": "儿子" },
+                { "en": "figlia", "zh": "女儿" },
+                { "en": "nonno", "zh": "爷爷" }
+            ],
+            [
+                { "en": "nonna", "zh": "奶奶" },
+                { "en": "zio", "zh": "叔叔" },
+                { "en": "zia", "zh": "阿姨" },
+                { "en": "cugino", "zh": "堂兄弟" },
+                { "en": "cugina", "zh": "堂姐妹" },
+                { "en": "marito", "zh": "丈夫" },
+                { "en": "moglie", "zh": "妻子" },
+                { "en": "Intelligenza artificiale", "zh": "人工智能" },
+                { "en": "E-commerce", "zh": "电子商务" },
+                { "en": "Pagamento online", "zh": "在线支付" },
+                { "en": "Forum", "zh": "论坛" },
+                { "en": "Influencer", "zh": "网红" }
+            ],
+            [
+                { "en": "Mi piace", "zh": "点赞" },
+                { "en": "Commento", "zh": "评论" },
+                { "en": "Notifica", "zh": "通知" },
+                { "en": "Risoluzione", "zh": "分辨率" },
+                { "en": "Pixelato", "zh": "马赛克化" },
+                { "en": "pioggia", "zh": "雨" },
+                { "en": "neve", "zh": "雪" },
+                { "en": "vento", "zh": "风" },
+                { "en": "tempo", "zh": "天气" },
+                { "en": "giorno", "zh": "日" },
+                { "en": "notte", "zh": "夜" },
+                { "en": "mattina", "zh": "早晨" }
+            ],
+            [
+                { "en": "nipote", "zh": "孙子/侄子" },
+                { "en": "animale", "zh": "动物" },
+                { "en": "cane", "zh": "狗" },
+                { "en": "camera", "zh": "房间" },
+                { "en": "valigia", "zh": "行李" },
+                { "en": "documento", "zh": "证件" },
+                { "en": "passaporto", "zh": "护照" },
+                { "en": "vacanza", "zh": "假期" },
+                { "en": "viaggio", "zh": "旅行" },
+                { "en": "mare", "zh": "海" },
+                { "en": "montagna", "zh": "山" },
+                { "en": "spiaggia", "zh": "沙滩" }
+            ],
+            [
+                { "en": "sole", "zh": "太阳" },
+                { "en": "Gennaio", "zh": "一月" },
+                { "en": "Febbraio", "zh": "二月" },
+                { "en": "Marzo", "zh": "三月" },
+                { "en": "Aprile", "zh": "四月" },
+                { "en": "Maggio", "zh": "五月" },
+                { "en": "Giugno", "zh": "六月" },
+                { "en": "Luglio", "zh": "七月" },
+                { "en": "Agosto", "zh": "八月" },
+                { "en": "Settembre", "zh": "九月" },
+                { "en": "Ottobre", "zh": "十月" },
+                { "en": "Novembre", "zh": "十一月" }
+            ],
+            [
+                { "en": "Dicembre", "zh": "十二月" },
+                { "en": "Prezzo", "zh": "价格" },
+                { "en": "Contanti", "zh": "现金" },
+                { "en": "Carta di credito", "zh": "信用卡" },
+                { "en": "Scontrino", "zh": "小票" },
+                { "en": "Ricevuta", "zh": "发票" },
+                { "en": "Offerta", "zh": "特价 / 优惠" },
+                { "en": "Sconto", "zh": "折扣" },
+                { "en": "Taglia", "zh": "尺码（衣物）" },
+                { "en": "Misura", "zh": "尺寸" },
+                { "en": "Chilo", "zh": "千克" },
+                { "en": "Grammo", "zh": "克" }
+            ],
+            [
+                { "en": "Litro", "zh": "升" },
+                { "en": "Pacco", "zh": "包（package）" },
+                { "en": "Bottiglia", "zh": "瓶" },
+                { "en": "Scatola", "zh": "盒子" },
+                { "en": "Barattolo", "zh": "罐子" },
+                { "en": "Fresco", "zh": "新鲜的" },
+                { "en": "Correre", "zh": "跑" },
+                { "en": "Camminare", "zh": "走路" },
+                { "en": "Entrare", "zh": "进入" },
+                { "en": "Uscire", "zh": "出去" },
+                { "en": "Salire", "zh": "上去" },
+                { "en": "Scendere", "zh": "下去" }
+            ],
+            [
+                { "en": "Portare", "zh": "带、拿" },
+                { "en": "Mettere", "zh": "放置" },
+                { "en": "Aprire", "zh": "打开" },
+                { "en": "Chiudere", "zh": "关闭" },
+                { "en": "Pensare", "zh": "思考" },
+                { "en": "Sapere", "zh": "知道（to know a fact）" },
+                { "en": "Conoscere", "zh": "认识、了解（to be familiar with）" },
+                { "en": "Capire", "zh": "明白、理解" },
+                { "en": "Ricordare", "zh": "记得" },
+                { "en": "Dimenticare", "zh": "忘记" },
+                { "en": "Imparare", "zh": "学习" },
+                { "en": "Insegnare", "zh": "教" }
+            ],
+            [
+                { "en": "Decidere", "zh": "决定" },
+                { "en": "Volere", "zh": "想要（to want）" },
+                { "en": "Parlare", "zh": "说话" },
+                { "en": "Chiedere", "zh": "询问" },
+                { "en": "Rispondere", "zh": "回答" },
+                { "en": "Telefonare", "zh": "打电话" },
+                { "en": "Scrivere", "zh": "写" },
+                { "en": "Leggere", "zh": "读" },
+                { "en": "Ascoltare", "zh": "听" },
+                { "en": "Spiegare", "zh": "解释" },
+                { "en": "Ridere", "zh": "笑" },
+                { "en": "Piangere", "zh": "哭" }
+            ],
+            [
+                { "en": "Dormire", "zh": "睡觉" },
+                { "en": "Alzarsi", "zh": "起床（反身动词）" },
+                { "en": "Lavarsi", "zh": "洗澡（反身动词）" },
+                { "en": "Vestirsi", "zh": "穿衣（反身动词）" },
+                { "en": "Comprare", "zh": "买" },
+                { "en": "Pagare", "zh": "付款" },
+                { "en": "Lavorare", "zh": "工作" },
+                { "en": "Studiare", "zh": "学习" },
+                { "en": "Vivere", "zh": "生活 / 居住" },
+                { "en": "Amare", "zh": "爱" },
+                { "en": "Bello", "zh": "漂亮的 / 美丽的" }
+            ],
+            [
+                { "en": "Brutto", "zh": "丑的 / 糟的" },
+                { "en": "Grande", "zh": "大的" },
+                { "en": "Piccolo", "zh": "小的" },
+                { "en": "Alto", "zh": "高的" },
+                { "en": "Basso", "zh": "矮的 / 低的" },
+                { "en": "Lungo", "zh": "长的" },
+                { "en": "Corto", "zh": "短的" },
+                { "en": "Vecchio", "zh": "老的 / 旧的" },
+                { "en": "Giovane", "zh": "年轻的" },
+                { "en": "Intelligente", "zh": "聪明的" },
+                { "en": "Stupido", "zh": "愚蠢的" }
+            ],
+            [
+                { "en": "Gentile", "zh": "有礼貌的 / 温和的" },
+                { "en": "Cattivo", "zh": "坏的 / 恶的" },
+                { "en": "Buono", "zh": "好的 / 善良的" },
+                { "en": "Triste", "zh": "悲伤的" },
+                { "en": "Felice", "zh": "快乐的" },
+                { "en": "Arrabbiato", "zh": "生气的" },
+                { "en": "Timido", "zh": "害羞的" },
+                { "en": "Socievole", "zh": "外向的" },
+                { "en": "Stanco", "zh": "累的" },
+                { "en": "Malato", "zh": "生病的" },
+                { "en": "Caldo", "zh": "热的" }
+            ],
+            [
+                { "en": "Freddo", "zh": "冷的" },
+                { "en": "Affamato", "zh": "饿的" },
+                { "en": "Assetato", "zh": "渴的" },
+                { "en": "Occupato", "zh": "忙的 / 占有 /占用" },
+                { "en": "Libero", "zh": "空闲的" },
+                { "en": "Pulito", "zh": "干净的" },
+                { "en": "Sporco", "zh": "脏的" },
+                { "en": "Facile", "zh": "简单的" },
+                { "en": "Difficile", "zh": "困难的" },
+                { "en": "Veloce", "zh": "快的" },
+                { "en": "Lento", "zh": "慢的" }
+            ],
+            [
+                { "en": "Nuovo", "zh": "新的" },
+                { "en": "Antico", "zh": "古老的" },
+                { "en": "Importante", "zh": "重要的" },
+                { "en": "Interessante", "zh": "有趣的" },
+                { "en": "Noioso", "zh": "无聊的" },
+                { "en": "Utile", "zh": "有用的" },
+                { "en": "Ricco", "zh": "富有的" },
+                { "en": "Povero", "zh": "贫穷的" },
+                { "en": "Caro", "zh": "贵的 / 亲爱的" },
+                { "en": "Economico", "zh": "实惠的" },
+                { "en": "Pronto", "zh": "准备好的" }
+            ]
+        ];
+
+        // 所有词汇（用于“全部词汇”模式）
+        const allWords = wordGroups.flat();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM 元素
+            const groupSelect = document.getElementById('groupSelect');
+            const modeSelect = document.getElementById('modeSelect');
+            const definitionElement = document.getElementById('definition');
+            const wordInput = document.getElementById('wordInput');
+            const checkBtn = document.getElementById('checkBtn');
+            const skipBtn = document.getElementById('skipBtn');
+            const resultElement = document.getElementById('result');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const wordCard = document.getElementById('wordCard');
+            const summaryElement = document.getElementById('summary');
+            const scoreElement = document.getElementById('score');
+            const totalElement = document.getElementById('total');
+            const wrongWordsElement = document.getElementById('wrongWords');
+            const restartBtn = document.getElementById('restartBtn');
+
+            // 状态变量
+            let words = [];
+            let wordOrder = [];
+            let currentWordIndex = 0;
+            let correctCount = 0;
+            let wrongWords = [];
+
+            // Fisher-Yates 洗牌算法
+            function shuffle(array) {
+                const shuffled = [...array];
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
+                return shuffled;
+            }
+
+            // 更新词汇列表
+            function updateWords() {
+                const groupIndex = parseInt(groupSelect.value);
+                words = groupIndex === -1 ? allWords : wordGroups[groupIndex];
+                wordOrder = shuffle([...Array(words.length).keys()]);
+                currentWordIndex = 0;
+                correctCount = 0;
+                wrongWords = [];
+                updateProgress();
+                showNextWord();
+                wordCard.style.display = 'block';
+                summaryElement.style.display = 'none';
+            }
+
+            // 显示下一个单词
+            function showNextWord() {
+                if (currentWordIndex >= words.length) {
+                    finishGame();
+                    return;
+                }
+
+                const wordIndex = wordOrder[currentWordIndex];
+                const word = words[wordIndex];
+                const mode = modeSelect.value;
+                definitionElement.textContent = mode === 'zh2en' ? word.zh : word.en;
+                wordInput.value = '';
+                wordInput.placeholder = mode === 'zh2en' ? 'Inserisci in italiano ✍️' : 'Inserisci in cinese ✍️';
+                resultElement.textContent = '';
+                wordInput.focus();
+            }
+
+            // 检查答案
+            function checkAnswer() {
+                const userInput = wordInput.value.trim().toLowerCase();
+                const wordIndex = wordOrder[currentWordIndex];
+                const word = words[wordIndex];
+                const mode = modeSelect.value;
+                const correctAnswer = mode === 'zh2en' ? word.en.toLowerCase() : word.zh;
+
+                if (!userInput) {
+                    resultElement.textContent = 'Inserisci una risposta ❗';
+                    resultElement.className = 'result incorrect';
+                    return;
+                }
+
+                if (userInput === correctAnswer) {
+                    resultElement.textContent = 'Corretto! ✅';
+                    resultElement.className = 'result correct';
+                    correctCount++;
+                    currentWordIndex++;
+                    updateProgress();
+                    setTimeout(showNextWord, 1500);
+                } else {
+                    resultElement.textContent = `Sbagliato! 😔 La risposta corretta è: ${correctAnswer}`;
+                    resultElement.className = 'result incorrect';
+                    wrongWords.push({ question: mode === 'zh2en' ? word.zh : word.en, correct: correctAnswer, input: userInput });
+                }
+            }
+
+            // 跳到下一个单词
+            function skipWord() {
+                const wordIndex = wordOrder[currentWordIndex];
+                const word = words[wordIndex];
+                const mode = modeSelect.value;
+                wrongWords.push({ question: mode === 'zh2en' ? word.zh : word.en, correct: mode === 'zh2en' ? word.en : word.zh, input: 'Saltato ⏭️' });
+                currentWordIndex++;
+                updateProgress();
+                showNextWord();
+            }
+
+            // 更新进度条和文本
+            function updateProgress() {
+                const progress = (currentWordIndex / words.length) * 100;
+                progressBar.style.width = `${progress}%`;
+                progressText.textContent = `${currentWordIndex}/${words.length}`;
+            }
+
+            // 完成游戏
+            function finishGame() {
+                wordCard.style.display = 'none';
+                summaryElement.style.display = 'block';
+                scoreElement.textContent = correctCount;
+                totalElement.textContent = words.length;
+
+                // 显示错题
+                if (wrongWords.length > 0) {
+                    wrongWordsElement.innerHTML = '<h3>Errori da rivedere: 📝</h3><ul>' +
+                        wrongWords.map(w => `<li>Domanda: ${w.question}, Risposta corretta: ${w.correct}, Tua risposta: ${w.input}</li>`).join('') +
+                        '</ul>';
+                } else {
+                    wrongWordsElement.innerHTML = '<p>Tutto corretto! Nessun errore 😊</p>';
+                }
+            }
+
+            // 事件监听器
+            groupSelect.addEventListener('change', updateWords);
+            modeSelect.addEventListener('change', updateWords);
+            checkBtn.addEventListener('click', checkAnswer);
+            skipBtn.addEventListener('click', skipWord);
+            wordInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    checkAnswer();
+                }
+            });
+            restartBtn.addEventListener('click', updateWords);
+
+            // 初始化
+            updateWords();
+        });
+    </script>
+</body>
+</html>
