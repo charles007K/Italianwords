@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pratica di Coniugazione dei Verbi 🇮🇹</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    .card {
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .input-grid {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    input {
+      padding: 8px;
+      font-size: 16px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .result {
+      margin-top: 20px;
+      font-weight: bold;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>Pratica di Coniugazione dei Verbi 🇮🇹</h1>
+  <div class="card">
+    <h2 id="verb-title"></h2>
+    <div class="input-grid">
+      <label for="io">io</label><input id="io">
+      <label for="tu">tu</label><input id="tu">
+      <label for="lui">lui/lei</label><input id="lui">
+      <label for="noi">noi</label><input id="noi">
+      <label for="voi">voi</label><input id="voi">
+      <label for="loro">loro</label><input id="loro">
+    </div>
+    <button onclick="checkAnswers()">Controlla ✅</button>
+    <div class="result" id="result"></div>
+    <button onclick="nextVerb()">Prossimo verbo ⏭️</button>
+  </div>
+
+  <script>
+    const verbs = [
+      // -ARE
+      ['parlare', 'parlo', 'parli', 'parla', 'parliamo', 'parlate', 'parlano'],
+      ['lavorare', 'lavoro', 'lavori', 'lavora', 'lavoriamo', 'lavorate', 'lavorano'],
+      ['studiare', 'studio', 'studi', 'studia', 'studiamo', 'studiate', 'studiano'],
+      ['abitare', 'abito', 'abiti', 'abita', 'abitiamo', 'abitate', 'abitano'],
+      ['guardare', 'guardo', 'guardi', 'guarda', 'guardiamo', 'guardate', 'guardano'],
+      ['mangiare', 'mangio', 'mangi', 'mangia', 'mangiamo', 'mangiate', 'mangiano'],
+      ['ascoltare', 'ascolto', 'ascolti', 'ascolta', 'ascoltiamo', 'ascoltate', 'ascoltano'],
+      ['camminare', 'cammino', 'cammini', 'cammina', 'camminiamo', 'camminate', 'camminano'],
+      ['giocare', 'gioco', 'giochi', 'gioca', 'giochiamo', 'giocate', 'giocano'],
+      ['portare', 'porto', 'porti', 'porta', 'portiamo', 'portate', 'portano'],
+      // -ERE
+      ['scrivere', 'scrivo', 'scrivi', 'scrive', 'scriviamo', 'scrivete', 'scrivono'],
+      ['leggere', 'leggo', 'leggi', 'legge', 'leggiamo', 'leggete', 'leggono'],
+      ['prendere', 'prendo', 'prendi', 'prende', 'prendiamo', 'prendete', 'prendono'],
+      ['vivere', 'vivo', 'vivi', 'vive', 'viviamo', 'vivete', 'vivono'],
+      ['vendere', 'vendo', 'vendi', 'vende', 'vendiamo', 'vendete', 'vendono'],
+      ['mettere', 'metto', 'metti', 'mette', 'mettiamo', 'mettete', 'mettono'],
+      ['chiudere', 'chiudo', 'chiudi', 'chiude', 'chiudiamo', 'chiudete', 'chiudono'],
+      ['correre', 'corro', 'corri', 'corre', 'corriamo', 'correte', 'corrono'],
+      ['ridere', 'rido', 'ridi', 'ride', 'ridiamo', 'ridete', 'ridono'],
+      ['chiedere', 'chiedo', 'chiedi', 'chiede', 'chiediamo', 'chiedete', 'chiedono'],
+      // -IRE
+      ['dormire', 'dormo', 'dormi', 'dorme', 'dormiamo', 'dormite', 'dormono'],
+      ['sentire', 'sento', 'senti', 'sente', 'sentiamo', 'sentite', 'sentono'],
+      ['aprire', 'apro', 'apri', 'apre', 'apriamo', 'aprite', 'aprono'],
+      ['offrire', 'offro', 'offri', 'offre', 'offriamo', 'offrite', 'offrono'],
+      ['partire', 'parto', 'parti', 'parte', 'partiamo', 'partite', 'partono'],
+      ['finire', 'finisco', 'finisci', 'finisce', 'finiamo', 'finite', 'finiscono'],
+      ['capire', 'capisco', 'capisci', 'capisce', 'capiamo', 'capite', 'capiscono'],
+      ['preferire', 'preferisco', 'preferisci', 'preferisce', 'preferiamo', 'preferite', 'preferiscono'],
+      ['pulire', 'pulisco', 'pulisci', 'pulisce', 'puliamo', 'pulite', 'puliscono'],
+      ['spedire', 'spedisco', 'spedisci', 'spedisce', 'spediamo', 'spedite', 'spediscono'],
+      ['costruire', 'costruisco', 'costruisci', 'costruisce', 'costruiamo', 'costruite', 'costruiscono']
+    ];
+
+    let currentVerb;
+
+    function nextVerb() {
+      const index = Math.floor(Math.random() * verbs.length);
+      currentVerb = verbs[index];
+      document.getElementById("verb-title").textContent = `Verbo: ${currentVerb[0]}`;
+      ['io', 'tu', 'lui', 'noi', 'voi', 'loro'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById("result").textContent = '';
+    }
+
+    function checkAnswers() {
+      const inputs = ['io', 'tu', 'lui', 'noi', 'voi', 'loro'];
+      const values = inputs.map(id => document.getElementById(id).value.trim().toLowerCase());
+      const correct = currentVerb.slice(1);
+      const allCorrect = values.every((val, i) => val === correct[i]);
+      document.getElementById("result").textContent = allCorrect ? "✅ Tutto corretto!" : `❌ Sbagliato! La risposta corretta era: ${correct.join(', ')}`;
+    }
+
+    window.onload = nextVerb;
+  </script>
+</body>
+</html>
