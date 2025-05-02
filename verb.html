@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pratica di Coniugazione dei Verbi 🇮🇹</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    .card {
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    .input-grid {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: 8px;
+      margin-top: 20px;
+    }
+    .input-grid label {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 8px;
+    }
+    input {
+      padding: 8px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+    input.error {
+      border-color: #ff5252;
+      background-color: #ffeeee;
+    }
+    input.correct {
+      border-color: #4caf50;
+      background-color: #eeffee;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    button:active {
+      transform: scale(0.95);
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+    }
+    button:hover {
+      background-color: #3b9e40;
+    }
+    .button-container {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 20px;
+    }
+    .result {
+      margin-top: 20px;
+      font-weight: bold;
+      text-align: center;
+      min-height: 50px;
+    }
+    .translation {
+      color: #666;
+      font-style: italic;
+      text-align: center;
+      margin-top: 10px;
+    }
+    .isc-indicator {
+      color: #e91e63;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 10px;
+      display: none;
+    }
+    .encouragement {
+      color: #4caf50;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 10px;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    .emoji {
+      font-size: 1.2em;
+      margin: 0 3px;
+    }
+    .home-button-container {
+      text-align: center;
+      margin-top: 20px;
+      margin-bottom: 30px;
+    }
+    .home-button {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #3f51b5;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      transition: all 0.2s ease;
+    }
+    .home-button:hover {
+      background-color: #303f9f;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .home-button:active {
+      transform: scale(0.95);
+    }
+  </style>
+</head>
+<body>
+  <h1>Pratica di Coniugazione dei Verbi <span class="emoji">🇮🇹</span></h1>
+  <div class="card">
+    <h2 id="verb-title"></h2>
+    <div class="translation" id="translation"></div>
+    <div class="isc-indicator" id="isc-indicator">Questo verbo segue il modello -isc nella coniugazione <span class="emoji">⚠️</span> (这个动词遵循 -isc 变位模式)</div>
+    <div class="input-grid">
+      <label for="io">io</label><input id="io">
+      <label for="tu">tu</label><input id="tu">
+      <label for="lui">lui/lei</label><input id="lui">
+      <label for="noi">noi</label><input id="noi">
+      <label for="voi">voi</label><input id="voi">
+      <label for="loro">loro</label><input id="loro">
+    </div>
+    <div class="button-container">
+      <button onclick="checkAnswers()">Controlla <span class="emoji">✅</span></button>
+      <button onclick="nextVerb()">Prossimo verbo <span class="emoji">⏭️</span></button>
+    </div>
+    <div class="result" id="result"></div>
+    <div class="encouragement" id="encouragement"></div>
+  </div>
+  
+  <div class="home-button-container">
+    <a href="index.html" class="home-button">Torna alla home <span class="emoji">🏠</span></a>
+  </div>
+
+  <script>
+    const verbs = [
+      // -ARE
+      ['parlare', '说话，交谈', false, 'parlo', 'parli', 'parla', 'parliamo', 'parlate', 'parlano'],
+      ['lavorare', '工作，劳动', false, 'lavoro', 'lavori', 'lavora', 'lavoriamo', 'lavorate', 'lavorano'],
+      ['studiare', '学习，研究', false, 'studio', 'studi', 'studia', 'studiamo', 'studiate', 'studiano'],
+      ['abitare', '居住，栖息', false, 'abito', 'abiti', 'abita', 'abitiamo', 'abitate', 'abitano'],
+      ['guardare', '看，观察', false, 'guardo', 'guardi', 'guarda', 'guardiamo', 'guardate', 'guardano'],
+      ['mangiare', '吃，进食', false, 'mangio', 'mangi', 'mangia', 'mangiamo', 'mangiate', 'mangiano'],
+      ['ascoltare', '听，倾听', false, 'ascolto', 'ascolti', 'ascolta', 'ascoltiamo', 'ascoltate', 'ascoltano'],
+      ['camminare', '走路，步行', false, 'cammino', 'cammini', 'cammina', 'camminiamo', 'camminate', 'camminano'],
+      ['giocare', '玩，游戏', false, 'gioco', 'giochi', 'gioca', 'giochiamo', 'giocate', 'giocano'],
+      ['portare', '带，携带，搬运', false, 'porto', 'porti', 'porta', 'portiamo', 'portate', 'portano'],
+      // -ERE
+      ['scrivere', '写，书写', false, 'scrivo', 'scrivi', 'scrive', 'scriviamo', 'scrivete', 'scrivono'],
+      ['leggere', '读，阅读', false, 'leggo', 'leggi', 'legge', 'leggiamo', 'leggete', 'leggono'],
+      ['prendere', '拿，取，接受', false, 'prendo', 'prendi', 'prende', 'prendiamo', 'prendete', 'prendono'],
+      ['vivere', '生活，居住', false, 'vivo', 'vivi', 'vive', 'viviamo', 'vivete', 'vivono'],
+      ['vendere', '卖，销售', false, 'vendo', 'vendi', 'vende', 'vendiamo', 'vendete', 'vendono'],
+      ['mettere', '放，放置', false, 'metto', 'metti', 'mette', 'mettiamo', 'mettete', 'mettono'],
+      ['chiudere', '关，关闭', false, 'chiudo', 'chiudi', 'chiude', 'chiudiamo', 'chiudete', 'chiudono'],
+      ['correre', '跑，奔跑', false, 'corro', 'corri', 'corre', 'corriamo', 'correte', 'corrono'],
+      ['ridere', '笑，微笑', false, 'rido', 'ridi', 'ride', 'ridiamo', 'ridete', 'ridono'],
+      ['chiedere', '问，请求', false, 'chiedo', 'chiedi', 'chiede', 'chiediamo', 'chiedete', 'chiedono'],
+      // -IRE
+      ['dormire', '睡觉，睡眠', false, 'dormo', 'dormi', 'dorme', 'dormiamo', 'dormite', 'dormono'],
+      ['sentire', '听见，感觉', false, 'sento', 'senti', 'sente', 'sentiamo', 'sentite', 'sentono'],
+      ['aprire', '开，打开', false, 'apro', 'apri', 'apre', 'apriamo', 'aprite', 'aprono'],
+      ['offrire', '提供，奉献', false, 'offro', 'offri', 'offre', 'offriamo', 'offrite', 'offrono'],
+      ['partire', '出发，离开', false, 'parto', 'parti', 'parte', 'partiamo', 'partite', 'partono'],
+      ['finire', '完成，结束', true, 'finisco', 'finisci', 'finisce', 'finiamo', 'finite', 'finiscono'],
+      ['capire', '理解，明白', true, 'capisco', 'capisci', 'capisce', 'capiamo', 'capite', 'capiscono'],
+      ['preferire', '更喜欢，偏爱', true, 'preferisco', 'preferisci', 'preferisce', 'preferiamo', 'preferite', 'preferiscono'],
+      ['pulire', '清洁，打扫', true, 'pulisco', 'pulisci', 'pulisce', 'puliamo', 'pulite', 'puliscono'],
+      ['spedire', '发送，寄出', true, 'spedisco', 'spedisci', 'spedisce', 'spediamo', 'spedite', 'spediscono'],
+      ['costruire', '建造，构建', true, 'costruisco', 'costruisci', 'costruisce', 'costruiamo', 'costruite', 'costruiscono'],
+      // 新增动词
+      ['fare', '做，制作，行动', false, 'faccio', 'fai', 'fa', 'facciamo', 'fate', 'fanno'],
+      ['essere', '是，存在', false, 'sono', 'sei', 'è', 'siamo', 'siete', 'sono'],
+      ['avere', '有，拥有，持有', false, 'ho', 'hai', 'ha', 'abbiamo', 'avete', 'hanno'],
+      ['stare', '呆，停留，状态', false, 'sto', 'stai', 'sta', 'stiamo', 'state', 'stanno'],
+      ['dare', '给，给予，提供', false, 'do', 'dai', 'dà', 'diamo', 'date', 'danno']
+    ];
+
+    const encouragementMessages = [
+      "Ottimo lavoro! 👏 (太棒了！)",
+      "Fantastico! 🎉 (太好了！)",
+      "Perfetto! 💯 (完美！)",
+      "Eccellente! 🌟 (优秀！)",
+      "Bravissimo! 🏆 (非常棒！)",
+      "Sei un genio! 🧠 (你是天才！)",
+      "Continua così! 🚀 (继续加油！)",
+      "Sei sulla strada giusta! 🛣️ (你走在正确的道路上！)",
+      "Incredibile! ⭐ (难以置信！)",
+      "Che bravo! 👍 (真棒！)"
+    ];
+
+    let currentVerb;
+
+    function nextVerb() {
+      // Button feedback
+      const nextButton = event.currentTarget;
+      nextButton.style.backgroundColor = "#2d792f";
+      setTimeout(() => {
+        nextButton.style.backgroundColor = "#4caf50";
+      }, 200);
+
+      // Reset all inputs and styling
+      const inputs = ['io', 'tu', 'lui', 'noi', 'voi', 'loro'];
+      inputs.forEach(id => {
+        const input = document.getElementById(id);
+        input.value = '';
+        input.className = '';
+      });
+      
+      // Select random verb
+      const index = Math.floor(Math.random() * verbs.length);
+      currentVerb = verbs[index];
+      
+      // Update UI
+      document.getElementById("verb-title").textContent = `Verbo: ${currentVerb[0]} ${getVerbEmoji(currentVerb[0])}`;
+      document.getElementById("translation").textContent = `${currentVerb[1]}`;
+      document.getElementById("result").textContent = '';
+      document.getElementById("encouragement").textContent = '';
+      
+      // Show or hide -isc indicator
+      const iscIndicator = document.getElementById("isc-indicator");
+      if (currentVerb[2]) {
+        iscIndicator.style.display = "block";
+      } else {
+        iscIndicator.style.display = "none";
+      }
+    }
+
+    function getVerbEmoji(verb) {
+      const emojiMap = {
+        'parlare': '🗣️',
+        'lavorare': '💼',
+        'studiare': '📚',
+        'abitare': '🏠',
+        'guardare': '👀',
+        'mangiare': '🍽️',
+        'ascoltare': '👂',
+        'camminare': '🚶',
+        'giocare': '🎮',
+        'portare': '🧳',
+        'scrivere': '✍️',
+        'leggere': '📖',
+        'prendere': '👐',
+        'vivere': '🌱',
+        'vendere': '💰',
+        'mettere': '📥',
+        'chiudere': '🔒',
+        'correre': '🏃',
+        'ridere': '😄',
+        'chiedere': '❓',
+        'dormire': '😴',
+        'sentire': '🔊',
+        'aprire': '🔓',
+        'offrire': '🎁',
+        'partire': '🚶‍♂️',
+        'finire': '🏁',
+        'capire': '💡',
+        'preferire': '❤️',
+        'pulire': '🧹',
+        'spedire': '📬',
+        'costruire': '🏗️',
+        'fare': '🛠️',
+        'essere': '✨',
+        'avere': '👐',
+        'stare': '🧍',
+        'dare': '🤲'
+      };
+      
+      return emojiMap[verb] || '';
+    }
+
+    function checkAnswers() {
+      // Button feedback
+      const checkButton = event.currentTarget;
+      checkButton.style.backgroundColor = "#2d792f";
+      setTimeout(() => {
+        checkButton.style.backgroundColor = "#4caf50";
+      }, 200);
+    
+      const inputs = ['io', 'tu', 'lui', 'noi', 'voi', 'loro'];
+      const values = inputs.map(id => document.getElementById(id).value.trim().toLowerCase());
+      const correct = currentVerb.slice(3); // Skip the verb, translation, and isc flag
+      
+      let allCorrect = true;
+      
+      // Check each input and highlight correct/incorrect
+      inputs.forEach((id, i) => {
+        const input = document.getElementById(id);
+        if (values[i] === correct[i]) {
+          input.className = 'correct';
+        } else {
+          input.className = 'error';
+          allCorrect = false;
+        }
+      });
+      
+      // Display result message
+      if (allCorrect) {
+        document.getElementById("result").innerHTML = "✅ Tutto corretto! <span class='emoji'>🎉</span> (全部正确！)";
+        
+        // Show random encouragement message
+        const randomIndex = Math.floor(Math.random() * encouragementMessages.length);
+        document.getElementById("encouragement").textContent = encouragementMessages[randomIndex];
+      } else {
+        document.getElementById("result").innerHTML = `❌ Sbagliato! <span class='emoji'>😢</span><br>La risposta corretta era (错误！正确答案是):<br>${correct.join(', ')}`;
+        document.getElementById("encouragement").textContent = '';
+      }
+    }
+
+    // Initialize on page load
+    window.onload = function() {
+      // Select random verb
+      const index = Math.floor(Math.random() * verbs.length);
+      currentVerb = verbs[index];
+      
+      // Update UI
+      document.getElementById("verb-title").textContent = `Verbo: ${currentVerb[0]} ${getVerbEmoji(currentVerb[0])}`;
+      document.getElementById("translation").textContent = `${currentVerb[1]}`;
+      
+      // Show or hide -isc indicator
+      const iscIndicator = document.getElementById("isc-indicator");
+      if (currentVerb[2]) {
+        iscIndicator.style.display = "block";
+      } else {
+        iscIndicator.style.display = "none";
+      }
+    };
+  </script>
+</body>
+</html>
