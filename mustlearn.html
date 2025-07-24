@@ -27,28 +27,18 @@
       flex-direction: column;
       align-items: center;
       padding: 1rem;
+      padding-bottom: 4rem; /* 避开底部按钮 */
       transition: background .3s, color .3s;
     }
-    .controls {
-      margin-bottom: 1rem;
-      display: flex;
-      gap: .5rem;
-    }
-    button {
-      background: var(--btn-bg);
-      border: none;
-      padding: .5rem 1rem;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background .2s;
-    }
-    button:hover { filter: brightness(1.1); }
+
+    /* 卡片容器 */
     .card-container {
       perspective: 1000px;
       width: 100%;
       max-width: 400px;
       height: 250px;
       position: relative;
+      touch-action: pan-y; /* 允许水平滑动 */
     }
     .card {
       width: 100%;
@@ -67,8 +57,10 @@
       padding: 1rem;
       text-align: center;
     }
-    .card.flipped { transform: rotateY(180deg); }
-    .card .face {
+    .card.flipped {
+      transform: rotateY(180deg);
+    }
+    .face {
       backface-visibility: hidden;
       position: absolute;
       width: 100%; height: 100%;
@@ -76,17 +68,44 @@
       align-items: center;
       justify-content: center;
     }
-    .card .back {
+    .face.back {
       transform: rotateY(180deg);
     }
+
+    /* 底部按钮栏 */
+    .controls {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: var(--bg);
+      padding: .5rem 0;
+      display: flex;
+      justify-content: center;
+      gap: .5rem;
+      border-top: 1px solid #ccc;
+    }
+    button {
+      background: var(--btn-bg);
+      border: none;
+      padding: .5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: filter .2s;
+      font-size: 1rem;
+    }
+    button:hover {
+      filter: brightness(1.1);
+    }
+
     @media (max-width: 400px) {
       .card-container { height: 200px; }
       .card { font-size: 1.2rem; }
     }
   </style>
 </head>
-<body>
-
+<body data-theme="light">
+  <div class="card-container" id="cardContainer"></div>
   <div class="controls">
     <button id="prev">上一张</button>
     <button id="flip">翻转</button>
@@ -94,9 +113,6 @@
     <button id="known">我会了</button>
     <button id="themeToggle">夜间模式</button>
   </div>
-
-  <div class="card-container" id="cardContainer"></div>
-
   <script>
     // ① 数据源：从 CSV 提取的意中词表
     const cardsData = [
@@ -202,45 +218,43 @@
       {it: "a pièdi", zh: "步行"}
     ];
 
-    // ② 状态管理
+    // 2. 状态
     let currentIndex = 0;
     const learned = JSON.parse(localStorage.getItem('learned')) || [];
-    const theme = localStorage.getItem('theme') || 'light';
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
 
-    document.documentElement.setAttribute('data-theme', theme);
+    const container = document.getElementById('cardContainer');
 
-    // 渲染当前卡片
+    // 渲染卡片
     function renderCard() {
-      const container = document.getElementById('cardContainer');
       container.innerHTML = '';
-      if (currentIndex >= cardsData.length) currentIndex = 0;
-      const cardInfo = cardsData[currentIndex];
+      // 跳过已掌握
       if (learned.includes(currentIndex)) {
-        // 自动跳到下一个未掌握
         currentIndex = (currentIndex + 1) % cardsData.length;
         return renderCard();
       }
+      const info = cardsData[currentIndex];
       const card = document.createElement('div');
       card.className = 'card';
       card.innerHTML = `
-        <div class="face front">${cardInfo.it}</div>
-        <div class="face back">${cardInfo.zh}</div>
+        <div class="face front">${info.it}</div>
+        <div class="face back">${info.zh}</div>
       `;
       container.appendChild(card);
 
-      // 点击翻转
+      // 翻转按钮
       document.getElementById('flip').onclick = () =>
         card.classList.toggle('flipped');
     }
 
-    // 翻页与“我会了”
+    // 上一张/下一张/我会了
     document.getElementById('next').onclick = () => {
       currentIndex = (currentIndex + 1) % cardsData.length;
       renderCard();
     };
     document.getElementById('prev').onclick = () => {
-      currentIndex =
-        (currentIndex - 1 + cardsData.length) % cardsData.length;
+      currentIndex = (currentIndex - 1 + cardsData.length) % cardsData.length;
       renderCard();
     };
     document.getElementById('known').onclick = () => {
@@ -253,13 +267,30 @@
 
     // 夜间模式切换
     document.getElementById('themeToggle').onclick = () => {
-      const newTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', newTheme);
-      localStorage.setItem('theme', newTheme);
+      const cur = document.documentElement.getAttribute('data-theme');
+      const next = cur === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
     };
+
+    // 移动端左右滑动
+    let touchStartX = 0;
+    container.addEventListener('touchstart', e => {
+      touchStartX = e.changedTouches[0].clientX;
+    });
+    container.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      if (dx > 50) {
+        document.getElementById('prev').click();
+      } else if (dx < -50) {
+        document.getElementById('next').click();
+      }
+    });
 
     // 初始渲染
     renderCard();
   </script>
 </body>
 </html>
+
+
