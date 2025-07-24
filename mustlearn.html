@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>意大利语单词卡片</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --fg: #222222;
+      --card-bg: #f8f8f8;
+      --btn-bg: #e0e0e0;
+    }
+    [data-theme="dark"] {
+      --bg: #222222;
+      --fg: #f0f0f0;
+      --card-bg: #333333;
+      --btn-bg: #444444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem;
+      transition: background .3s, color .3s;
+    }
+    .controls {
+      margin-bottom: 1rem;
+      display: flex;
+      gap: .5rem;
+    }
+    button {
+      background: var(--btn-bg);
+      border: none;
+      padding: .5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    button:hover { filter: brightness(1.1); }
+    .card-container {
+      perspective: 1000px;
+      width: 100%;
+      max-width: 400px;
+      height: 250px;
+      position: relative;
+    }
+    .card {
+      width: 100%;
+      height: 100%;
+      background: var(--card-bg);
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,.2);
+      position: absolute;
+      top: 0; left: 0;
+      transform-style: preserve-3d;
+      transition: transform .5s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      padding: 1rem;
+      text-align: center;
+    }
+    .card.flipped { transform: rotateY(180deg); }
+    .card .face {
+      backface-visibility: hidden;
+      position: absolute;
+      width: 100%; height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card .back {
+      transform: rotateY(180deg);
+    }
+    @media (max-width: 400px) {
+      .card-container { height: 200px; }
+      .card { font-size: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="controls">
+    <button id="prev">上一张</button>
+    <button id="flip">翻转</button>
+    <button id="next">下一张</button>
+    <button id="known">我会了</button>
+    <button id="themeToggle">夜间模式</button>
+  </div>
+
+  <div class="card-container" id="cardContainer"></div>
+
+  <script>
+    // ① 数据源：从 CSV 提取的意中词表
+    const cardsData = [
+      {it: "come si chiama", zh: "你叫什么名字"},
+      {it: "mi chiamo", zh: "我叫"},
+      {it: "di dov'è", zh: "你来自哪里"},
+      {it: "voglio mangiare la pasta", zh: "我想吃意大利面"},
+      {it: "vado al supermercato", zh: "我去超市"},
+      {it: "vado a buttare la spazzatura", zh: "我去倒垃圾"},
+      {it: "vado in biblioteca", zh: "我去图书馆"},
+      {it: "vado a fare la doccia", zh: "我去洗澡"},
+      {it: "aspetta un attimo", zh: "稍等一下"},
+      {it: "fammi controllare", zh: "let me have a check"},
+      {it: "quando ceniamo", zh: "我们什么时候吃晚饭"},
+      {it: "tessera fedeltà", zh: "会员卡"},
+      {it: "borsa", zh: "袋子"},
+      {it: "busta di plastica", zh: "塑料袋"},
+      {it: "chiedere", zh: "询问"},
+      {it: "sconto", zh: "折扣"},
+      {it: "permesso di soggiorno", zh: "居留卡"},
+      {it: "parcheggio", zh: "停车、停车场"},
+      {it: "moneta", zh: "硬币"},
+      {it: "banconota", zh: "纸币"},
+      {it: "spiccioli", zh: "零钱"},
+      {it: "comperare", zh: "买"},
+      {it: "patente", zh: "许可"},
+      {it: "bianco", zh: "白色"},
+      {it: "nero", zh: "黑色"},
+      {it: "giallo", zh: "黄色"},
+      {it: "rosso", zh: "红色"},
+      {it: "rosa", zh: "粉色"},
+      {it: "blu", zh: "蓝色"},
+      {it: "marrone", zh: "棕色"},
+      {it: "grigio", zh: "灰色"},
+      {it: "verde", zh: "绿色"},
+      {it: "arancione", zh: "橙色"},
+      {it: "colorato", zh: "彩色"},
+      {it: "argento", zh: "银白色"},
+      {it: "guarda", zh: "你看"},
+      {it: "capitare", zh: "明白"},
+      {it: "dritto", zh: "直行"},
+      {it: "griare a sinistra", zh: "左转"},
+      {it: "griare a destra", zh: "右转"},
+      {it: "pane", zh: "面包"},
+      {it: "fredda", zh: "冰镇的"},
+      {it: "ghiaccio", zh: "加冰块的"},
+      {it: "biscotti", zh: "饼干(复数)"},
+      {it: "pollo", zh: "鸡肉"},
+      {it: "manzo", zh: "牛肉"},
+      {it: "carne di maiale", zh: "猪肉"},
+      {it: "càrne d’agnèllo", zh: "羊肉"},
+      {it: "condividere", zh: "分享"},
+      {it: "cocomero", zh: "西瓜"},
+      {it: "conto", zh: "费用"},
+      {it: "certo", zh: "当然"},
+      {it: "il prossimo", zh: "下一个"},
+      {it: "numero", zh: "号码"},
+      {it: "caldo", zh: "热的"},
+      {it: "giocare", zh: "玩"},
+      {it: "la colazione", zh: "早饭"},
+      {it: "la cena", zh: "晚饭"},
+      {it: "il pranzo", zh: "午饭"},
+      {it: "crudo", zh: "生的"},
+      {it: "cotto", zh: "熟的"},
+      {it: "specchio", zh: "镜子"},
+      {it: "dimenticavo", zh: "我忘记了"},
+      {it: "mattina", zh: "上午"},
+      {it: "pomeriggio", zh: "下午"},
+      {it: "contanti", zh: "现金"},
+      {it: "pioggia", zh: "下雨"},
+      {it: "dieci volte", zh: "十次"},
+      {it: "resto", zh: "剩余部分"},
+      {it: "gonna", zh: "裙子"},
+      {it: "pantaloni", zh: "裤子"},
+      {it: "azienda", zh: "公司"},
+      {it: "supermercato", zh: "超市"},
+      {it: "chiuso", zh: "已关闭"},
+      {it: "porta", zh: "门"},
+      {it: "zucchero", zh: "糖"},
+      {it: "sale", zh: "盐"},
+      {it: "aceto", zh: "醋"},
+      {it: "orario", zh: "时刻表"},
+      {it: "tiroide", zh: "甲状腺"},
+      {it: "gusti", zh: "口味"},
+      {it: "cono", zh: "蛋筒"},
+      {it: "benzina", zh: "汽油"},
+      {it: "diesel", zh: "柴油"},
+      {it: "quale", zh: "哪个"},
+      {it: "strumento", zh: "工具"},
+      {it: "un etto", zh: "一两=100克"},
+      {it: "va bene così", zh: "差不多可以了"},
+      {it: "restituire", zh: "归还"},
+      {it: "occhiali", zh: "眼镜"},
+      {it: "piccànte", zh: "辣的"},
+      {it: "prenotazióne", zh: "预约(餐厅)"},
+      {it: "appuntaménto", zh: "预约(正式场合)"},
+      {it: "asportàre", zh: "打包"},
+      {it: "adésso", zh: "now"},
+      {it: "ti piàce", zh: "你喜欢吗"},
+      {it: "tàvolo", zh: "桌子"},
+      {it: "sèdia", zh: "椅子"},
+      {it: "càpo", zh: "老板"},
+      {it: "a pièdi", zh: "步行"}
+    ];
+
+    // ② 状态管理
+    let currentIndex = 0;
+    const learned = JSON.parse(localStorage.getItem('learned')) || [];
+    const theme = localStorage.getItem('theme') || 'light';
+
+    document.documentElement.setAttribute('data-theme', theme);
+
+    // 渲染当前卡片
+    function renderCard() {
+      const container = document.getElementById('cardContainer');
+      container.innerHTML = '';
+      if (currentIndex >= cardsData.length) currentIndex = 0;
+      const cardInfo = cardsData[currentIndex];
+      if (learned.includes(currentIndex)) {
+        // 自动跳到下一个未掌握
+        currentIndex = (currentIndex + 1) % cardsData.length;
+        return renderCard();
+      }
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="face front">${cardInfo.it}</div>
+        <div class="face back">${cardInfo.zh}</div>
+      `;
+      container.appendChild(card);
+
+      // 点击翻转
+      document.getElementById('flip').onclick = () =>
+        card.classList.toggle('flipped');
+    }
+
+    // 翻页与“我会了”
+    document.getElementById('next').onclick = () => {
+      currentIndex = (currentIndex + 1) % cardsData.length;
+      renderCard();
+    };
+    document.getElementById('prev').onclick = () => {
+      currentIndex =
+        (currentIndex - 1 + cardsData.length) % cardsData.length;
+      renderCard();
+    };
+    document.getElementById('known').onclick = () => {
+      if (!learned.includes(currentIndex)) {
+        learned.push(currentIndex);
+        localStorage.setItem('learned', JSON.stringify(learned));
+      }
+      renderCard();
+    };
+
+    // 夜间模式切换
+    document.getElementById('themeToggle').onclick = () => {
+      const newTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+    };
+
+    // 初始渲染
+    renderCard();
+  </script>
+</body>
+</html>
